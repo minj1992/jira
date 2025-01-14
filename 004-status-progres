@@ -1,0 +1,21 @@
+$token = "<your_token>"  # Replace with your actual token
+$baseUrl = "https://<domain.jira.com>"  # Replace with your Jira domain
+$checkStatusUrl = "$baseUrl/rest/api/2/reindex/progress"
+
+try {
+    $response = Invoke-RestMethod -Uri $checkStatusUrl `
+                                  -Headers @{ "Authorization" = "Bearer $token"; "Accept" = "application/json" } `
+                                  -Method GET `
+                                  -ErrorAction Stop
+
+    # Debugging: Output the full response to check the structure
+    Write-Output "Response: $($response | ConvertTo-Json -Depth 2)"
+    
+    if ($response.currentProgress -eq 100) {
+        Write-Output "Reindexing is complete."
+    } else {
+        Write-Output "Reindexing is in progress: $($response.currentProgress)% complete."
+    }
+} catch {
+    Write-Error "Error occurred: $_"
+}
