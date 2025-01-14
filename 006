@@ -1,3 +1,4 @@
+# trigger reindexing working one
 [string] $token = "your_bearer_token_here"  # Replace with your actual Bearer token
 
 try {
