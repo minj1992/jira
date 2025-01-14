@@ -1,32 +1,21 @@
-$token = "dummytoken"  # Replace with your actual token
-$baseUrl = "https://dev-domain.com"  # Replace with your Jira domain
-$triggerReindexUrl = "$baseUrl/proxy/rest/api/2/reindex/progress?type=FOREGROUND"
+[string] $token = "your_bearer_token_here"  # Replace with your actual Bearer token
 
 try {
-    # Ensure there are no leading or trailing spaces in the token
-    $token = $token.Trim()
-
-    # Base64 encode the token (if required)
-    $encodedToken = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($token))
-
-    # Send the POST request and capture the response
-    $response = Invoke-RestMethod -Uri $triggerReindexUrl `
-                                  -Headers @{ 
-                                      "Authorization" = "Bearer $encodedToken"; 
-                                      "Accept" = "application/json" 
-                                  } `
-                                  -Method POST `
-                                  -ErrorAction Stop
-
-    # Output the full response to check the structure
-    Write-Output "Response: $($response | ConvertTo-Json -Depth 2)"
-
-    # Check the response for status
-    if ($response.status -eq 'STARTED') {
-        Write-Output "Reindexing has started successfully."
-    } else {
-        Write-Output "Unexpected response: $($response.status)"
+    # Prepare the Authorization header with Bearer token
+    $headers = @{
+        "Authorization" = "Bearer $token"
+        "Content-Type" = "application/json"
     }
-} catch {
-    Write-Error "Error occurred: $_"
+
+    # Define the API endpoint URL
+    $requestUri = "https://jirahostname.com/rest/api/2/reindex"
+
+    # Send the POST request
+    $response = Invoke-RestMethod -Uri $requestUri -Method POST -Headers $headers
+
+    # Output response
+    Write-Output "Reindexing triggered successfully."
+}
+catch {
+    Write-Warning "Error occurred: $($_.Exception.Message)"
 }
