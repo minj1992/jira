@@ -23,3 +23,19 @@ try {
 } catch {
     Write-Error "Error occurred: $_"
 }
+
+----------------------------------------------------
+
+response 
+
+
+Response: {
+    "progressUrl":  "/secure/admin/jira/IndexProgress.jspa?taskId=46200",
+    "currentProgress":  95,
+    "currentSubTask":  "Currently working on: Issue index",
+    "type":  "FOREGROUND",
+    "submittedTime":  "2025-01-14T07:16:02.330+0000",
+    "startTime":  "2025-01-14T07:16:02.335+0000",
+    "success":  false
+}
+Progress data is missing or in an unexpected format.
