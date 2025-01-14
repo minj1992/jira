@@ -1,0 +1,22 @@
+# trigger reindexing working one
+[string] $token = "your_bearer_token_here"  # Replace with your actual Bearer token
+
+try {
+    # Prepare the Authorization header with Bearer token
+    $headers = @{
+        "Authorization" = "Bearer $token"
+        "Content-Type" = "application/json"
+    }
+
+    # Define the API endpoint URL
+    $requestUri = "https://jirahostname.com/rest/api/2/reindex"
+
+    # Send the POST request
+    $response = Invoke-RestMethod -Uri $requestUri -Method POST -Headers $headers
+
+    # Output response
+    Write-Output "Reindexing triggered successfully."
+}
+catch {
+    Write-Warning "Error occurred: $($_.Exception.Message)"
+}
