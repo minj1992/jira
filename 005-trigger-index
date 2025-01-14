@@ -1,14 +1,13 @@
-$token = "<your_token>"  # Replace with your actual token
-$baseUrl = "https://<domain.jira.com>"  # Replace with your Jira domain
+$token = "xyz" # Replace with your actual token
+$baseUrl = "https://domain.com" # Replace with your Jira domain
 $triggerReindexUrl = "$baseUrl/rest/api/2/reindex"
-
 try {
     # Trigger reindexing by sending a POST request
     $response = Invoke-RestMethod -Uri $triggerReindexUrl `
-                                  -Headers @{ "Authorization" = "Bearer $token"; "Accept" = "application/json" } `
+                                  -Headers @{ "Authorization" = "Bearer $token"; 
+"Accept" = "application/json" } `
                                   -Method POST `
                                   -ErrorAction Stop
-
     # Debugging: Output the full response to check the structure
     Write-Output "Response: $($response | ConvertTo-Json -Depth 2)"
     
@@ -19,4 +18,6 @@ try {
     }
 } catch {
     Write-Error "Error occurred: $_"
-}
+} : Error occurred: The remote server returned an error: (415).
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException
