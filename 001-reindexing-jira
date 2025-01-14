@@ -79,3 +79,20 @@ Summary:
 The POST command triggers the reindex.
 The GET command (with /reindex/progress) checks the progress of the reindex.
 Let me know if you need assistance running this!
+
+
+-----------------------------------------
+
+
+# Define variables
+$token = "<your_token>"  # Replace with your personal access token
+$nodeIP = "<node-ip>"    # Replace with the node's IP address
+
+# Construct the URL
+$url = "http://$nodeIP:8080/rest/api/2/reindex/progress"
+
+# Make the GET request
+Invoke-RestMethod -Method GET -Uri $url -Headers @{
+    "Authorization" = "Bearer $token";
+    "Accept" = "application/json"
+}
