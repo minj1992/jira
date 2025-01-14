@@ -1,3 +1,5 @@
+#working one tested
+
 $token = "<your_token>"  # Replace with your actual token
 $baseUrl = "https://<domain.jira.com>"  # Replace with your Jira domain
 $checkStatusUrl = "$baseUrl/rest/api/2/reindex/progress"
