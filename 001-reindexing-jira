@@ -1,0 +1,81 @@
+001-reindexing-jira
+
+The Jira reindexing process in a Data Center setup works as follows:
+
+Key Points from the Description:
+Reindexing in Jira Data Center:
+
+Jira Data Center is a clustered environment, meaning multiple nodes work together to handle traffic.
+A full reindex updates the search index for all Jira issues, ensuring that users can search and retrieve issues correctly after changes like configuration updates, bulk issue imports, or plugin installations.
+Impact of Reindexing:
+
+Reindexing can temporarily disrupt the node performing the operation, making it unavailable to serve user requests.
+To minimize disruption, it is recommended to take one node out of the cluster and perform the reindex on that node.
+Reindexing via Application URL:
+
+If you initiate reindexing using the application URL (e.g., https://jira.example.com), the request is routed to any node in the cluster.
+The node selected by the load balancer will become unavailable to users until the reindexing is complete.
+Reindexing via a Specific Node's IP:
+
+By using the IP address of a specific node, you can perform the reindexing on that particular node only. This ensures:
+Other nodes in the cluster remain available.
+The application URL is not affected during the reindexing process.
+Synchronization:
+
+Once reindexing is completed on the selected node, the updated index is automatically synchronized across the cluster.
+This synchronization ensures all nodes are updated without requiring a full reindex on every node.
+If You Use the Application URL for Reindexing:
+Yes, initiating reindexing via the application URL will select a node (based on the load balancer) to perform the reindex. Once that node completes the reindexing, the updated index will synchronize across all nodes automatically. However:
+
+That particular node will be unavailable during the reindexing process.
+Users accessing Jira may experience temporary disruptions if the load balancer routes traffic to the affected node.
+Recommendation:
+To minimize user impact:
+
+Perform the reindexing on a specific node by using its IP address in the cURL command:
+bash
+Copy code
+curl -D- \
+  -X POST \
+  -H "Authorization: Bearer <your_token>" \
+  -H 'Accept: application/json' \
+  'http://<node-ip>:8080/rest/api/2/reindex?type=FOREGROUND'
+This way, the rest of the cluster remains fully operational for users.
+Let me know if you need help setting this up!
+
+
+
+------------------------------}}}}}}}}}}}}}}}}}}}}}}}}}}}---------------------------------------------------
+
+No, the cURL command you provided does not check the progress of the reindexing process. Instead, it initiates a full reindex on the specified Jira node in the foreground. This means the reindexing process starts immediately, and the node will not respond to user requests until the reindex is complete.
+
+How to Check the Progress of Reindexing:
+------------------------------------------
+To monitor the progress of the reindexing operation, you can use the GET request to the appropriate Jira REST API endpoint for reindexing status:
+
+
+curl -D- \
+  -X GET \
+  -H "Authorization: Bearer <your_token>" \
+  -H 'Accept: application/json' \
+  'http://<node-ip>:8080/rest/api/2/reindex/progress'
+Expected Response:
+If the reindexing is in progress, the API will return a JSON response indicating the current status and percentage completed.
+Example response:
+json
+Copy code
+{
+    "state": "RUNNING",
+    "percentageComplete": 45
+}
+If the reindexing has completed, it might return:
+json
+Copy code
+{
+    "state": "IDLE",
+    "percentageComplete": 100
+}
+Summary:
+The POST command triggers the reindex.
+The GET command (with /reindex/progress) checks the progress of the reindex.
+Let me know if you need assistance running this!
