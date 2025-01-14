@@ -6,8 +6,8 @@ try {
     # Ensure there are no leading or trailing spaces in the token
     $token = $token.Trim()
 
-    # Send the POST request using Invoke-WebRequest to capture both headers and body
-    $response = Invoke-WebRequest -Uri $triggerReindexUrl `
+    # Send the POST request and capture the response
+    $response = Invoke-RestMethod -Uri $triggerReindexUrl `
                                   -Headers @{ 
                                       "Authorization" = "Bearer $token"; 
                                       "Accept" = "application/json" 
@@ -15,19 +15,14 @@ try {
                                   -Method POST `
                                   -ErrorAction Stop
 
-    # Output the response headers
-    Write-Output "Response Headers: $($response.Headers | ConvertTo-Json -Depth 2)"
-    
-    # Output the full response (body)
-    Write-Output "Response Body: $($response.Content | ConvertTo-Json -Depth 2)"
-    
-    # Parse the JSON body
-    $body = $response.Content | ConvertFrom-Json
-    
-    if ($body.status -eq 'STARTED') {
+    # Output the full response to check the structure
+    Write-Output "Response: $($response | ConvertTo-Json -Depth 2)"
+
+    # Check the response for status
+    if ($response.status -eq 'STARTED') {
         Write-Output "Reindexing has started successfully."
     } else {
-        Write-Output "Unexpected response: $($body.status)"
+        Write-Output "Unexpected response: $($response.status)"
     }
 } catch {
     Write-Error "Error occurred: $_"
