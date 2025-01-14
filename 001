@@ -1,0 +1,87 @@
+# Define variables
+$JiraBaseURL = "https://domain.jira.com"
+$AuthToken = "your_personal_access_token"
+
+# Function to check if reindexing is in progress
+function Check-ReindexingProgress {
+    $progressUrl = "$JiraBaseURL/rest/api/2/reindex/progress"
+    $headers = @{
+        Authorization = "Bearer $AuthToken"
+        Accept        = "application/json"
+    }
+
+    try {
+        $response = Invoke-RestMethod -Uri $progressUrl -Headers $headers -Method GET
+        if ($response.progressUrl) {
+            Write-Output "Reindexing is already in progress. Progress URL: $($response.progressUrl)"
+            return $response.requestId
+        } else {
+            Write-Output "No reindexing in progress."
+            return $null
+        }
+    } catch {
+        Write-Error "Failed to check reindexing progress: $_"
+        return $null
+    }
+}
+
+# Function to trigger a new reindex
+function Trigger-Reindex {
+    $reindexUrl = "$JiraBaseURL/rest/api/2/reindex?type=FOREGROUND"
+    $headers = @{
+        Authorization = "Bearer $AuthToken"
+        Accept        = "application/json"
+    }
+
+    try {
+        $response = Invoke-RestMethod -Uri $reindexUrl -Headers $headers -Method POST
+        Write-Output "Reindex triggered successfully. Request ID: $($response.requestId)"
+        return $response.requestId
+    } catch {
+        Write-Error "Failed to trigger reindex: $_"
+        return $null
+    }
+}
+
+# Function to monitor reindexing progress
+function Monitor-ReindexingProgress {
+    param (
+        [string]$RequestId
+    )
+
+    $progressUrl = "$JiraBaseURL/rest/api/2/reindex/progress/$RequestId"
+    $headers = @{
+        Authorization = "Bearer $AuthToken"
+        Accept        = "application/json"
+    }
+
+    while ($true) {
+        try {
+            $response = Invoke-RestMethod -Uri $progressUrl -Headers $headers -Method GET
+            if ($response.percentComplete -eq 100) {
+                Write-Output "Reindexing completed successfully!"
+                break
+            } else {
+                Write-Output "Reindexing in progress: $($response.percentComplete)% completed."
+                Start-Sleep -Seconds 10
+            }
+        } catch {
+            Write-Error "Failed to fetch reindex progress: $_"
+            break
+        }
+    }
+}
+
+# Main logic
+$requestId = Check-ReindexingProgress
+
+if ($requestId) {
+    Write-Output "Monitoring ongoing reindexing process..."
+    Monitor-ReindexingProgress -RequestId $requestId
+} else {
+    Write-Output "Triggering a new reindex process..."
+    $newRequestId = Trigger-Reindex
+    if ($newRequestId) {
+        Monitor-ReindexingProgress -RequestId $newRequestId
+    }
+}
