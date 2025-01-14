@@ -1,4 +1,32 @@
+$token = "dummytoken"  # Replace with your actual token
+$baseUrl = "https://dev-domain.com"  # Replace with your Jira domain
+$triggerReindexUrl = "$baseUrl/proxy/rest/api/2/reindex/progress?type=FOREGROUND"
+
+try {
+    # Ensure there are no leading or trailing spaces in the token
+    $token = $token.Trim()
+
+    # Base64 encode the token (if required)
+    $encodedToken = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($token))
+
+    # Send the POST request and capture the response
+    $response = Invoke-RestMethod -Uri $triggerReindexUrl `
+                                  -Headers @{ 
+                                      "Authorization" = "Bearer $encodedToken"; 
+                                      "Accept" = "application/json" 
+                                  } `
+                                  -Method POST `
+                                  -ErrorAction Stop
+
+    # Output the full response to check the structure
+    Write-Output "Response: $($response | ConvertTo-Json -Depth 2)"
+
+    # Check the response for status
+    if ($response.status -eq 'STARTED') {
+        Write-Output "Reindexing has started successfully."
+    } else {
+        Write-Output "Unexpected response: $($response.status)"
+    }
+} catch {
     Write-Error "Error occurred: $_"
-} : Error occurred: {"message":"Invalid key=value pair (missing equal-sign) in Authorization header (hashed with SHA-256 and encoded with Base64): 'Xyfbidbbfijjk='."}
-    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
-    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException
+}
