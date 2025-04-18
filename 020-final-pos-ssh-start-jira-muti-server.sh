@@ -82,3 +82,20 @@ foreach ($serverInfo in $servers) {
 
 Write-Output "Jira start process completed on all servers."
 exit 0
+
+
+
+###################################
+
+This script will:
+
+Iterate through a list of servers defined in the $servers array.
+Establish an SSH session for each server and maintain it until all commands are executed.
+Attempt to start the Jira service on each server using sudo systemctl start jira.
+Print a message indicating the SSH session was secured successfully for each server.
+Check the status of the Jira service up to 4 times with a 5-second interval between checks for each server.
+If the status is active, it will confirm that Jira has been successfully started on that server and move to the next server.
+If the status is failed, it will indicate that Jira is not running and retry.
+If the status is anything else, it will throw an error, disconnect the SSH session, and exit with code 1.
+If Jira cannot be started after multiple attempts on any server, it will throw an error, disconnect the SSH session, and exit with code 1.
+If Jira is successfully started on all servers, it will print a success message and exit with code 0
