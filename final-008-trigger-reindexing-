@@ -1,3 +1,4 @@
+# reference  :  https://support.atlassian.com/jira/kb/how-to-reindex-jira-server-and-data-center-using-rest-api-via-curl-command/
 # trigger reindexing working one
 [string] $token = "your_bearer_token_here"  # Replace with your actual Bearer token
 
