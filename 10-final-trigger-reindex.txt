@@ -1,0 +1,24 @@
+# trigger reindexing working one
+[string] $token = ""  
+
+try {
+    
+    $headers = @{
+        "Authorization" = "Bearer $token"
+        "Content-Type" = "application/json"
+    }
+
+    # Define the API endpoint URL
+ #background reindexing in that case system and nodes will be running  app will be up and running    #$requestUri = "https://dev-jira.deloitte.com/rest/api/2/reindex"
+ # below is the full reindex, node will be locked nobody will be able to login till completion
+    $requestUri = "https://dev.jira.com/rest/api/2/reindex?type=FOREGROUND"
+
+    # Send the POST request
+    $response = Invoke-RestMethod -Uri $requestUri -Method POST -Headers $headers
+
+    # Output response
+    Write-Output "Reindexing triggered successfully."
+}
+catch {
+    Write-Warning "Error occurred: $($_.Exception.Message)"
+}
