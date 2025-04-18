@@ -27,3 +27,15 @@ done
 # If the loop completes without stopping Jira
 echo "Could not stop Jira after multiple attempts. Please check manually."
 exit 1
+
+
+
+#This script will:
+
+#Attempt to stop the Jira service using systemctl stop jira.
+#Check the status of the Jira service up to 4 times with a 5-second interval between checks.
+#If the status is failed, it will confirm that Jira has been successfully stopped.
+#If the status is active, it will indicate that Jira is still running and retry.
+#If the status is anything else, it will throw an error and exit.
+#If Jira cannot be stopped after multiple attempts, it will throw an error and exit.
+
