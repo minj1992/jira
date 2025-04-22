@@ -1,0 +1,173 @@
+#note server name fomat you can keep --> $machine = "aw2528l001.atrame.dummy.com","aw2528l002.atrame.dummy.com"
+#stoping jira 
+Write-Host "print server list : $(webServersfqdn)"
+
+$servers1 = '$(webServersfqdn)'
+$servers = $servers1 -split ','
+
+$username = '$(z6UserOnly)'
+$password = '$(z6Password)'
+$jiraService = 'jira'
+
+function Run-SSHCommand($sshSession, $command) {
+    try {
+        $result = Invoke-SSHCommand -SessionId $sshSession.SessionId -Command $command
+        return $result.Output
+    } catch {
+        Write-Error "Error occurred while executing command: $_"
+        return $null
+    }
+}
+
+function Check-JiraStatus($sshSession) {
+    $statusCommand = "sudo systemctl is-active ${jiraService}"
+    return Run-SSHCommand $sshSession $statusCommand
+}
+
+function Kill-JavaProcesses($sshSession) {
+    $killCommand = "sudo pkill -f java"
+    Run-SSHCommand $sshSession $killCommand
+}
+
+foreach ($server in $servers) {
+    try {
+        $sshSession = New-SSHSession -ComputerName $server -Credential (New-Object PSCredential($username, (ConvertTo-SecureString $password -AsPlainText -Force))) -AcceptKey
+        Write-Output "SSH session secured successfully for $server."
+    } catch {
+        Write-Error "Failed to establish SSH session for $server."
+        continue
+    }
+
+    $stopResult = Run-SSHCommand $sshSession "sudo systemctl stop ${jiraService}"
+
+    if ($stopResult -eq $null) {
+        Write-Output "Skipping further checks for $server due to command execution failure."
+        Remove-SSHSession -SessionId $sshSession.SessionId
+        continue
+    }
+
+    for ($i = 1; $i -le 4; $i++) {
+        $status = Check-JiraStatus($sshSession)
+        if ($status -eq "failed") {
+            Write-Output "Jira has been successfully stopped on $server."
+            break
+        } elseif ($status -eq "active") {
+            Write-Output "Jira is still running on $server. Attempt $i of 4."
+        } else {
+            Write-Output "Unexpected status on $server : $status. Please check Jira manually."
+            break
+        }
+        Start-Sleep -Seconds 5
+    }
+
+    if ($status -eq "active") {
+        Write-Output "Could not stop Jira on $server after multiple attempts. Attempting to kill Java processes..."
+        Kill-JavaProcesses($sshSession)
+
+     $stopResult = Run-SSHCommand $sshSession "sudo systemctl stop $jiraService"
+
+        for ($i = 1; $i -le 4; $i++) {
+            $status = Check-JiraStatus($sshSession)
+            if ($status -eq "failed") {
+                Write-Output "Jira has been successfully stopped on $server after killing Java processes."
+                break
+            } elseif ($status -eq "active") {
+                Write-Output "Jira is still running on $server after killing Java processes. Attempt $i of 4."
+            } else {
+                Write-Output "Unexpected status on $server : $status. Please check Jira manually."
+                break
+            }
+            Start-Sleep -Seconds 5
+        }
+
+        if ($status -eq "active") {
+            Write-Output "Could not stop Jira on $server after multiple attempts, even after killing Java processes. Please check manually."
+        }
+    }
+
+    Remove-SSHSession -SessionId $sshSession.SessionId
+}
+
+Write-Output "Jira stop process completed on all servers."
+exit 0
+
+###################################################################################################3
+
+
+# start jira 
+
+Write-Host "print server list : $(webServersfqdn)"
+
+$servers1 = '$(webServersfqdn)'
+$servers = $servers1 -split ','
+
+$username = '$(z6UserOnly)'
+$password = '$(z6Password)'
+$jiraService = 'jira'
+
+
+function Run-SSHCommand($sshSession, $command) {
+    try {
+        $result = Invoke-SSHCommand -SessionId $sshSession.SessionId -Command $command
+        return $result.Output
+    } catch {
+        Write-Error "Error occurred while executing command: $_"
+        return $null
+    }
+}
+
+
+function Check-JiraStatus($sshSession) {
+    $statusCommand = "sudo systemctl is-active $jiraService"
+    return Run-SSHCommand $sshSession $statusCommand
+}
+
+
+function Start-JiraService($sshSession) {
+    $startCommand = "sudo systemctl start $jiraService"
+    return Run-SSHCommand $sshSession $startCommand
+}
+
+foreach ($server in $servers) {
+    try {
+        $sshSession = New-SSHSession -ComputerName $server -Credential (New-Object PSCredential($username, (ConvertTo-SecureString $password -AsPlainText -Force))) -AcceptKey
+        Write-Output "SSH session secured successfully for $server."
+    } catch {
+        Write-Error "Failed to establish SSH session for $server."
+        continue
+    }
+
+    $startResult = Start-JiraService($sshSession)
+
+    if ($startResult -eq $null) {
+        Write-Output "Skipping further checks for $server due to command execution failure."
+        Remove-SSHSession -SessionId $sshSession.SessionId
+        continue
+    }
+
+
+    for ($i = 1; $i -le 4; $i++) {
+        $status = Check-JiraStatus($sshSession)
+        if ($status -eq "active") {
+            Write-Output "Jira has been successfully started on $server."
+            break
+        } elseif ($status -eq "failed") {
+            Write-Output "Jira is not running on $server. Attempt $i of 4."
+        } else {
+            Write-Output "Unexpected status on $server : $status. Please check Jira manually."
+            break
+        }
+        Start-Sleep -Seconds 5
+    }
+
+
+    if ($status -ne "active") {
+        Write-Output "Could not start Jira on $server after multiple attempts. Please check manually."
+    }
+
+    Remove-SSHSession -SessionId $sshSession.SessionId
+}
+
+Write-Output "Jira start process completed on all servers."
+exit 0
+
